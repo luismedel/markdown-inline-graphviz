@@ -1,18 +1,16 @@
 # Markdown Inline Graphviz
 
-A Python Markdown extension that replaces inline Graphviz definitins with
-inline SVGs or PNGs!
+> Note: This is a fork of the [Markdown Inline Graphviz extension by Steffen Prince](https://github.com/sprin/markdown-inline-graphviz) with additional syntax support and minor modifications.
 
-Why render the graphs inline? No configuration! Works with any
-Python-Markdown-based static site generator, such as
-[MkDocs](http://www.mkdocs.org/), [Pelican](http://blog.getpelican.com/), and
-[Nikola](https://getnikola.com/) out of the box without configuring an output
-directory.
+A Python Markdown extension that replaces inline Graphviz definitions with inline SVGs or PNGs!
+
+Why render the graphs inline? No configuration! Works with any Python-Markdown-based static site generator, such as
+[MkDocs](http://www.mkdocs.org/), [Pelican](http://blog.getpelican.com/), and [Nikola](https://getnikola.com/) out of the box without configuring an output directory.
 
 ## Installation
 
 ```sh
-$ pip install markdown-inline-graphviz
+$ pip install git+https://github.com/luismedel/markdown-inline-graphviz
 ```
 
 ## Usage
@@ -26,15 +24,28 @@ markdown_extensions:
 
 To use it in your Markdown doc:
 
-```
-{% dot attack_plan.svg
+<pre>
+```graphviz dot attack_plan.svg
     digraph G {
         rankdir=LR
         Earth [peripheries=2]
         Mars
         Earth -> Mars
     }
-%}
+```
+</pre>
+
+...or using tilde fences...
+
+```markdown
+~~~graphviz dot attack_plan.svg
+    digraph G {
+        rankdir=LR
+        Earth [peripheries=2]
+        Mars
+        Earth -> Mars
+    }
+~~~
 ```
 
 Supported graphviz commands: `dot`, `neato`, `fdp`, `sfdp`, `twopi`, `circo`.
