@@ -28,8 +28,6 @@ import subprocess
 import typing as t
 
 REGEXPS: t.List[re.Pattern] = [
-    # block
-    re.compile(r"^\{% (?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)%}\s*$", re.MULTILINE | re.DOTALL),
     # backtick fences
     re.compile(
         r"^```\s*graphviz\s+(?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)```\s*$",
