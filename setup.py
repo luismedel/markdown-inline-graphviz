@@ -2,7 +2,7 @@ import os
 import sys
 from setuptools import setup
 
-VERSION = "1.0"
+VERSION = "1.0.1"
 
 setup(
     name="Markdown Inline Graphviz Extension",

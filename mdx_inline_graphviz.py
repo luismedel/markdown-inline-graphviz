@@ -87,20 +87,21 @@ class InlineGraphvizPreprocessor(markdown.preprocessors.Preprocessor):
 
             args = [command, "-T" + filetype]
             proc = subprocess.Popen(args, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-            proc.stdin.write(content.encode("utf-8"))
-
+            proc.stdin.write(content.encode())
             output, _ = proc.communicate()
 
+            graph: str
+
             if filetype == "svg":
-                data_url_filetype = "svg+xml"
-                encoding = "utf-8"
-                graph = output.decode(encoding)
+                graph = output.decode()
+                # Strip any garbage outside the svg tag
+                svg_pos = graph.index("<svg")
+                if svg_pos != -1:
+                    graph = graph[svg_pos:]
             elif filetype == "png":
-                data_url_filetype = "png"
-                encoding = "base64"
-                output = base64.b64encode(output)
-                data_path = "data:image/%s;%s,%s" % (data_url_filetype, encoding, output)
-                graph = "![" + filename + "](" + data_path + ")"
+                b64 = base64.b64encode(output)
+                data_path = f"data:image/png;base64,{b64}"
+                graph = f'<img src="{data_path}" title="{filename}" />'
 
             text = "%s\n%s\n%s" % (text[: m.start()], graph, text[m.end() :])
             text_offset = m.end()
