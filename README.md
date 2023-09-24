@@ -16,12 +16,12 @@ directory.
 
 # Usage
 
-Activate the `inline_graphviz` extension. For example, with Mkdocs, you add a
+Activate the `mdx_inline_graphviz` extension. For example, with Mkdocs, you add a
 stanza to mkdocs.yml:
 
 ```
 markdown_extensions:
-    - inline_graphviz
+    - mdx_inline_graphviz
 ```
 
 To use it in your Markdown doc:
