@@ -27,74 +27,62 @@ import base64
 
 # Global vars
 BLOCK_RE = re.compile(
-    r'^\{% (?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)%}\s*$',
-    re.MULTILINE | re.DOTALL)
+    r"^\{% (?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)%}\s*$", re.MULTILINE | re.DOTALL
+)
 # Command whitelist
-SUPPORTED_COMMAMDS = ['dot', 'neato', 'fdp', 'sfdp', 'twopi', 'circo']
+SUPPORTED_COMMAMDS = ["dot", "neato", "fdp", "sfdp", "twopi", "circo"]
 
 
 class InlineGraphvizExtension(markdown.Extension):
-
     def extendMarkdown(self, md):
-        """ Add InlineGraphvizPreprocessor to the Markdown instance. """
+        """Add InlineGraphvizPreprocessor to the Markdown instance."""
         md.registerExtension(self)
-        md.preprocessors.register(InlineGraphvizPreprocessor(md), 'graphviz_block', 1.0)
+        md.preprocessors.register(InlineGraphvizPreprocessor(md), "graphviz_block", 1.0)
 
 
 class InlineGraphvizPreprocessor(markdown.preprocessors.Preprocessor):
-
     def __init__(self, md):
         super(InlineGraphvizPreprocessor, self).__init__(md)
 
     def run(self, lines):
-        """ Match and generate dot code blocks."""
+        """Match and generate dot code blocks."""
 
         text = "\n".join(lines)
         while 1:
             m = BLOCK_RE.search(text)
             if m:
-                command = m.group('command')
+                command = m.group("command")
                 # Whitelist command, prevent command injection.
                 if command not in SUPPORTED_COMMAMDS:
-                    raise Exception('Command not supported: %s' % command)
-                filename = m.group('filename')
-                content = m.group('content')
-                filetype = filename[filename.rfind('.')+1:]
+                    raise Exception("Command not supported: %s" % command)
+                filename = m.group("filename")
+                content = m.group("content")
+                filetype = filename[filename.rfind(".") + 1 :]
 
-                args = [command, '-T'+filetype]
+                args = [command, "-T" + filetype]
                 try:
-                    proc = subprocess.Popen(
-                        args,
-                        stdin=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
-                    proc.stdin.write(content.encode('utf-8'))
+                    proc = subprocess.Popen(args, stdin=subprocess.PIPE, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+                    proc.stdin.write(content.encode("utf-8"))
 
                     output, err = proc.communicate()
 
-                    if filetype == 'svg':
-                        data_url_filetype = 'svg+xml'
-                        encoding = 'utf-8'
+                    if filetype == "svg":
+                        data_url_filetype = "svg+xml"
+                        encoding = "utf-8"
                         img = output.decode(encoding)
 
-                    if filetype == 'png':
-                        data_url_filetype = 'png'
-                        encoding = 'base64'
+                    if filetype == "png":
+                        data_url_filetype = "png"
+                        encoding = "base64"
                         output = base64.b64encode(output)
-                        data_path = "data:image/%s;%s,%s" % (
-                            data_url_filetype,
-                            encoding,
-                            output)
+                        data_path = "data:image/%s;%s,%s" % (data_url_filetype, encoding, output)
                         img = "![" + filename + "](" + data_path + ")"
 
-                    text = '%s\n%s\n%s' % (
-                        text[:m.start()], img, text[m.end():])
+                    text = "%s\n%s\n%s" % (text[: m.start()], img, text[m.end() :])
 
                 except Exception as e:
-                        err = str(e) + ' : ' + str(args)
-                        return (
-                            '<pre>Error : ' + err + '</pre>'
-                            '<pre>' + content + '</pre>').split('\n')
+                    err = str(e) + " : " + str(args)
+                    return ("<pre>Error : " + err + "</pre>" "<pre>" + content + "</pre>").split("\n")
 
             else:
                 break
