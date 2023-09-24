@@ -27,18 +27,26 @@ import subprocess
 
 import typing as t
 
-# Global vars
-BLOCK_RE: re.Pattern = re.compile(
-    r"^\{% (?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)%}\s*$", re.MULTILINE | re.DOTALL
-)
+REGEXPS: t.List[re.Pattern] = [
+    # block
+    re.compile(r"^\{% (?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)%}\s*$", re.MULTILINE | re.DOTALL),
 
-FENCES_RE: re.Pattern = re.compile(
-    r"^```\s*graphviz\s+(?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)```\s*$", re.MULTILINE | re.DOTALL
-)
+    # backtick fences
+    re.compile(
+        r"^```\s*graphviz\s+(?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)```\s*$",
+        re.MULTILINE | re.DOTALL,
+    ),
 
-# Command whitelist
-SUPPORTED_COMMAMDS: t.List[str] = ["dot", "neato", "fdp", "sfdp", "twopi", "circo"]
-SUPPORTED_FILETYPES: t.List[str] = ["svg", "png"]
+    # tilde fences
+    re.compile(
+        r"^~~~\s*graphviz\s+(?P<command>\w+)\s+(?P<filename>[^\s]+)\s*\n(?P<content>.*?)~~~\s*$",
+        re.MULTILINE | re.DOTALL,
+    ),
+]
+
+VALID_COMMAMDS: t.List[str] = ["dot", "neato", "fdp", "sfdp", "twopi", "circo"]
+
+VALID_FILETYPES: t.List[str] = ["svg", "png"]
 
 
 class InlineGraphvizExtension(markdown.Extension):
@@ -59,28 +67,26 @@ class InlineGraphvizPreprocessor(markdown.preprocessors.Preprocessor):
         text_offset: int = 0
 
         while True:
-            m_block: re.Match | None = BLOCK_RE.search(text, text_offset)
-            m_fences: re.Match | None = FENCES_RE.search(text, text_offset)
-            if not m_block and not m_fences:
+            m: re.Match | None = None
+            for r in REGEXPS:
+                tmp = r.search(text, text_offset)
+                if not tmp:
+                    continue
+                if not m or tmp.start() < m.start():
+                    m = tmp
+
+            if not m:
                 break
 
-            m: re.Match
-            if not m_block:
-                m = m_fences
-            elif not m_fences:
-                m = m_block
-            else:
-                m = m_block if m_block.start() < m_fences.start() else m_fences
-
             command = m.group("command")
-            if command not in SUPPORTED_COMMAMDS:
+            if command not in VALID_COMMAMDS:
                 raise Exception(f"Command not supported: {command}")
 
             filename = m.group("filename")
             content = m.group("content")
 
             filetype = filename[filename.rfind(".") + 1 :]
-            if filetype not in SUPPORTED_FILETYPES:
+            if filetype not in VALID_FILETYPES:
                 raise Exception(f"File type not supported: {filetype}")
 
             args = [command, "-T" + filetype]
